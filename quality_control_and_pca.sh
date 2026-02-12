@@ -26,10 +26,10 @@ plink2 --bfile /projects/einf2700/NeuroIMAGE_genetics/RICOPILI_merged/ricopili_i
   --geno 0.01 \
   --mind 0.01 \
   --write-snplist \
-  --make-just-fam \
+  --make-bed \
   --out genome.QC
   
-awk 'NR==1 || !seen[$2]++' genome.QC.fam > genome.QC1.fam
+awk 'NR==1 || !seen[$1]++' genome.QC.snplist > genome.QC1.snplist
 
 ##########################################################
 ## PCA of ancestry
