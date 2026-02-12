@@ -1,4 +1,3 @@
-### R
 # Regression of ADHD on PRS-PCA
 # Reading in data
 pcs <- read.table("/scratch-shared/hdavis/PCA.eigenvec", header=F) #PCAs of ancestry
