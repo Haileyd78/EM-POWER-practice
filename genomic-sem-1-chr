@@ -1,0 +1,93 @@
+# Code adapted from:
+# GenomicSEM Common Factor GWAS tutorial
+# https://github.com/GenomicSEM/GenomicSEM/wiki/4.-Common-Factor-GWAS
+
+#remotes::install_github("GenomicSEM/GenomicSEM")
+library(data.table)
+library(GenomicSEM)
+require(GenomicSEM)
+
+setwd("/gpfs/home4/hdavis/genomic_sem/physical")
+
+# Specifying file names
+trait.names <- c("vig_pa_days", "mod_pa_days","walk_days")
+
+files <- paste0("sumstats_clean/", trait.names, "_chr22.txt")
+
+# Specifying sample sizes
+N=c(400340, 400124, 413244)
+
+#define the reference file being used to allign alleles across summary stats
+#here we are using hapmap3
+hm3<-"/gpfs/home4/hdavis/genomic_sem/w_hm3.snplist"
+
+#definte the imputation quality filter
+info.filter=0.9
+
+#define the MAF filter
+maf.filter=0.01
+
+#Run munge
+munge(files=files,hm3=hm3,trait.names=trait.names,N=N,info.filter=info.filter,maf.filter=maf.filter)
+
+##############################################################################
+#2. LDSC regression
+#vector of munged summary statisitcs
+traits <- paste0(trait.names, ".sumstats.gz")
+
+#enter sample prevalence of .5 to reflect that all traits were munged using the sum of effective sample size
+#In this case, NA since the traits are all continuous
+sample.prev<-NA
+
+#vector of population prevalences (NA since we are using continuous traits)
+population.prev<-NA 
+
+#the folder of LD scores
+ld<-"/gpfs/home4/hdavis/genomic_sem/eur_w_ld_chr/eur_w_ld_chr"
+
+#the folder of LD weights [typically the same as folder of LD scores]
+wld<-"/gpfs/home4/hdavis/genomic_sem/eur_w_ld_chr/eur_w_ld_chr"
+
+#name the traits (same labels as used earlier)
+trait.names <- c("vig_pa_days", "mod_pa_days","walk_days")
+
+#run LDSC
+LDSCoutput<-ldsc(traits=traits,sample.prev=sample.prev,population.prev=population.prev,ld=ld,wld=wld,trait.names=trait.names)
+
+#optional command to save the output as a .RData file for later use
+save(LDSCoutput,file="LDSCoutput_ch22.RData")
+
+#####################################################################################
+#Sumstats
+#files<-c("gwas_clean_files/mod_pa_days.txt","gwas_clean_files/vig_pa_days.txt")
+
+ref= "/gpfs/home4/hdavis/genomic_sem/reference.1000G.maf.0.005.txt"
+
+trait.names <- c("vig_pa_days", "mod_pa_days","walk_days")
+
+se.logit= rep(F,3) 
+
+linprob=NULL
+
+info.filter=.6 #Default option
+
+maf.filter=0.01
+
+OLS=NULL
+
+N=c(400340,400124,413244)
+
+betas <- rep("BETA", 3)
+
+PHYS_sumstats <-sumstats(files=files,ref=ref,trait.names=trait.names,se.logit=se.logit,OLS=NULL,linprob=linprob,N=N,betas=betas,info.filter=info.filter,maf.filter=maf.filter,keep.indel=FALSE,parallel=FALSE,cores=NULL)
+
+##################################################################################
+#Running the common factor GWAS
+PHYS_factor_ch22  <- commonfactorGWAS(covstruc = LDSCoutput, SNPs = PHYS_sumstats,cores=3,parallel=TRUE)
+
+#Saving common factor GWAS output
+saveRDS(PHYS_factor_ch22, "/scratch-shared/hdavis/PHYS_factor_ch22.rds")
+
+fwrite(PHYS_factor_ch22,
+       "/scratch-shared/hdavis/PHYS_factor_ch22.txt",
+       sep="\t")
