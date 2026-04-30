@@ -65,19 +65,20 @@ ref= "/gpfs/home4/hdavis/genomic_sem/reference.1000G.maf.0.005.txt"
 
 trait.names <- c("vig_pa_days", "mod_pa_days","walk_days")
 
-se.logit= rep(F,3) 
+#Specifying settings for the sumstats() function:
+se.logit= rep(F,3) #Whether SEs are on a logit scale 
 
-linprob=NULL
+linprob=NULL #Indicating whether the GWAS are binary outcomes with Z-statistics or analyzed using a linear probability model
 
 info.filter=.6 #Default option
 
 maf.filter=0.01
 
-OLS=NULL
+OLS=NULL #Indicates whether GWAS were continuous and used OLS
 
 N=c(400340,400124,413244)
 
-betas <- rep("BETA", 3)
+betas <- rep("BETA", 3) #Column names for the betas
 
 PHYS_sumstats <-sumstats(files=files,ref=ref,trait.names=trait.names,se.logit=se.logit,OLS=NULL,linprob=linprob,N=N,betas=betas,info.filter=info.filter,maf.filter=maf.filter,keep.indel=FALSE,parallel=FALSE,cores=NULL)
 
